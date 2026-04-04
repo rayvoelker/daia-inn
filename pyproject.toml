@@ -1,8 +1,15 @@
 [project]
 name = "daia-inn"
 version = "0.1.0"
-description = "Add your description here"
-requires-python = ">=3.11"
+description = "MCP server exposing daia workstation AI infrastructure"
+requires-python = ">=3.10"
 dependencies = [
-    "tmuxp>=1.67.0",
+    "mcp",
+    "httpx",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
 ]
