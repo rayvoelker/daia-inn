@@ -1,6 +1,4 @@
-def main():
-    print("Hello from daia-inn!")
-
+from src.server import mcp
 
 if __name__ == "__main__":
-    main()
+    mcp.run()
