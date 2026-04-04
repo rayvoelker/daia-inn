@@ -1,3 +1,5 @@
+"""Configuration defaults and role map for daia-inn."""
+
 import os
 from dataclasses import dataclass, field
 
