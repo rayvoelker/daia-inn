@@ -1,0 +1,39 @@
+services:
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  inn:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - INN_PORT=3001
+      - MEMINFO_PATH=/host/meminfo
+    depends_on:
+      - ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [utility]
+    volumes:
+      - /proc/meminfo:/host/meminfo:ro
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
