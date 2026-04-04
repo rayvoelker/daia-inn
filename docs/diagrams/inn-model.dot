@@ -1,0 +1,283 @@
+// The Inn Model — Agent Orchestration as a Medieval Economy
+// Render with: dot -Tsvg inn-model.dot -o inn-model.svg
+//          or: dot -Tpng inn-model.dot -o inn-model.png -Gdpi=200
+
+digraph InnModel {
+    // Global settings
+    rankdir=TB
+    fontname="Helvetica,Arial,sans-serif"
+    fontsize=12
+    bgcolor="#fafafa"
+    pad=0.5
+    nodesep=0.6
+    ranksep=0.8
+    compound=true
+
+    node [fontname="Helvetica,Arial,sans-serif" fontsize=11 style="filled,rounded" shape=box]
+    edge [fontname="Helvetica,Arial,sans-serif" fontsize=9 color="#6b7280"]
+
+    // ═══════════════════════════════════════
+    // COLOR LEGEND
+    // ═══════════════════════════════════════
+    //   Green  (#10b981) = Free (local models)
+    //   Amber  (#f59e0b) = Cheap (Haiku)
+    //   Blue   (#3b82f6) = Moderate (Sonnet)
+    //   Purple (#8b5cf6) = Expensive (Opus)
+    //   Gray   (#6b7280) = Scripts/Tools
+    //   Red    (#ef4444) = Tests/Validation
+
+    // ═══════════════════════════════════════
+    // ARRIVAL
+    // ═══════════════════════════════════════
+    order [label="New Order Arrives\n(Task / Feature Request)" shape=doubleoctagon
+           fillcolor="#e0e7ff" fontcolor="#1e1b4b" penwidth=2 color="#4338ca"]
+
+    // ═══════════════════════════════════════
+    // FRONT OF HOUSE
+    // ═══════════════════════════════════════
+    subgraph cluster_front {
+        label="The Front of House"
+        labeljust=l
+        style="rounded,dashed"
+        color="#8b5cf6"
+        bgcolor="#faf5ff"
+        fontcolor="#5b21b6"
+        fontsize=13
+
+        innkeeper [label="INNKEEPER\n(Opus, $$$)\n\nClassifies orders\nManages budget\nWrites recipes (tests)\nOnly cooks as last resort"
+                   fillcolor="#8b5cf6" fontcolor="white" penwidth=2 color="#7c3aed"]
+
+        ledger [label="THE LEDGER\n(Stats DB)\n\nTask history\nCost tracking\nSuccess rates\nRouting rules"
+                shape=cylinder fillcolor="#f3f4f6" fontcolor="#1a1a1a" penwidth=1.5 color="#9ca3af"]
+
+        innkeeper -> ledger [label="consults" style=dashed color="#8b5cf6" dir=both]
+    }
+
+    order -> innkeeper [penwidth=2 color="#4338ca"]
+
+    // ═══════════════════════════════════════
+    // CLASSIFICATION
+    // ═══════════════════════════════════════
+    subgraph cluster_classify {
+        label="Order Classification"
+        labeljust=l
+        style="rounded,dashed"
+        color="#6b7280"
+        bgcolor="#f9fafb"
+        fontcolor="#374151"
+        fontsize=13
+
+        trivial [label="TRIVIAL\n\nrename, format\nscaffold, config"
+                 fillcolor="#fef3c7" fontcolor="#92400e" shape=box]
+        standard [label="STANDARD\n\nbug fix, utility\nnew feature"
+                  fillcolor="#d1fae5" fontcolor="#065f46" shape=box]
+        complex [label="COMPLEX\n\nrefactor, architecture\ncross-module"
+                 fillcolor="#dbeafe" fontcolor="#1e40af" shape=box]
+        vip [label="VIP ORDER\n\ntest design\ncritical decisions"
+             fillcolor="#ede9fe" fontcolor="#5b21b6" shape=box]
+    }
+
+    innkeeper -> trivial [label="classify" color="#6b7280"]
+    innkeeper -> standard [label="classify" color="#6b7280"]
+    innkeeper -> complex [label="classify" color="#6b7280"]
+    innkeeper -> vip [label="classify" color="#6b7280"]
+
+    // ═══════════════════════════════════════
+    // STABLES (Infrastructure)
+    // ═══════════════════════════════════════
+    subgraph cluster_stables {
+        label="The Stables (Infrastructure)"
+        labeljust=l
+        style="rounded,dashed"
+        color="#6b7280"
+        bgcolor="#f9fafb"
+        fontcolor="#374151"
+        fontsize=13
+
+        ostler [label="OSTLER\n(Script)\n\nCreates branch\nSets up worktree"
+                fillcolor="#6b7280" fontcolor="white"]
+        scout [label="RUNNER / SCOUT\n(gemma4:e4b, free)\n\nExplores codebase\nFinds ingredients\n13 tok/s, always loaded"
+               fillcolor="#10b981" fontcolor="white"]
+
+        ostler -> scout [label="workspace ready"]
+    }
+
+    trivial -> ostler [label="all orders\nstart here" lhead=cluster_stables]
+    standard -> ostler [label="" style=invis]
+    complex -> ostler [label="" style=invis]
+    vip -> ostler [label="" style=invis]
+
+    // ═══════════════════════════════════════
+    // KITCHEN — PREP STATION
+    // ═══════════════════════════════════════
+    subgraph cluster_kitchen {
+        label="The Kitchen (Implementation)"
+        labeljust=l
+        style="rounded,filled"
+        color="#dc2626"
+        bgcolor="#fef2f2"
+        fontcolor="#991b1b"
+        fontsize=13
+
+        subgraph cluster_prep {
+            label="Prep Station"
+            labeljust=l
+            style="rounded,dashed"
+            color="#f59e0b"
+            bgcolor="#fffbeb"
+            fontcolor="#92400e"
+
+            baker [label="BAKER\n(Haiku, $0.001)\n\nScaffolds files\nTemplates, stubs\nModule skeletons"
+                   fillcolor="#f59e0b" fontcolor="white"]
+            kitchenboy [label="KITCHEN BOY\n(Haiku, $0.001)\n\nBoilerplate\nImports, types\nSimple transforms"
+                        fillcolor="#f59e0b" fontcolor="white"]
+        }
+
+        subgraph cluster_cooking {
+            label="Cooking Station"
+            labeljust=l
+            style="rounded,dashed"
+            color="#10b981"
+            bgcolor="#ecfdf5"
+            fontcolor="#065f46"
+
+            linecook [label="LINE COOK\n(gemma4:26b, free)\n\nStandard dishes\n50 tok/s on GPU\n16/16 benchmarks"
+                      fillcolor="#10b981" fontcolor="white" penwidth=2 color="#059669"]
+            headchef [label="HEAD CHEF\n(Sonnet, $$)\n\nComplex dishes\nEscalation target\nCross-file work"
+                      fillcolor="#3b82f6" fontcolor="white"]
+            ownercooks [label="OWNER COOKS\n(Opus, $$$)\n\nLAST RESORT\nOnly when all\nothers fail"
+                        fillcolor="#8b5cf6" fontcolor="white" style="filled,rounded,bold"]
+        }
+
+        baker -> linecook [label="prepped" color="#059669"]
+        kitchenboy -> linecook [label="trivial\ntasks" color="#059669" style=dashed]
+    }
+
+    scout -> baker [label="findings" color="#059669"]
+    scout -> kitchenboy [label="trivial" color="#f59e0b" style=dashed]
+
+    // Escalation chain
+    linecook -> headchef [label="STUCK\nafter 3 attempts" color="#ef4444" penwidth=2 style=bold]
+    headchef -> ownercooks [label="STUCK" color="#ef4444" penwidth=2 style=bold]
+
+    // ═══════════════════════════════════════
+    // CLEANUP & REVIEW
+    // ═══════════════════════════════════════
+    subgraph cluster_service {
+        label="The Dining Room (Review & Delivery)"
+        labeljust=l
+        style="rounded,dashed"
+        color="#3b82f6"
+        bgcolor="#eff6ff"
+        fontcolor="#1e40af"
+        fontsize=13
+
+        chambermaid [label="CHAMBERMAID\n(Haiku, $0.001)\n\nLint fixes\nFormat cleanup\nDead code removal"
+                     fillcolor="#f59e0b" fontcolor="white"]
+        waitstaff [label="WAITSTAFF\n(Reviewer / Sonnet, $$)\n\nInspects every plate\nReal issues only\n(chambermaid got the rest)"
+                   fillcolor="#3b82f6" fontcolor="white" penwidth=2 color="#2563eb"]
+        customer [label="CUSTOMER\n(Tests)\n\nEats or sends back\npytest / cargo test\nThe final judge"
+                  fillcolor="#ef4444" fontcolor="white" shape=octagon penwidth=2 color="#dc2626"]
+    }
+
+    linecook -> chambermaid [label="done" color="#059669"]
+    headchef -> chambermaid [label="done" color="#3b82f6"]
+    ownercooks -> chambermaid [label="done" color="#8b5cf6"]
+    kitchenboy -> chambermaid [label="trivial done" color="#f59e0b" style=dashed]
+    chambermaid -> waitstaff [label="cleaned" color="#3b82f6"]
+    waitstaff -> customer [label="approved" color="#3b82f6"]
+
+    // Customer feedback
+    customer -> linecook [label="SENDS BACK\n(tests fail)" color="#ef4444" penwidth=2 style=bold]
+
+    // ═══════════════════════════════════════
+    // DELIVERY
+    // ═══════════════════════════════════════
+    subgraph cluster_delivery {
+        label="Delivery"
+        labeljust=l
+        style="rounded,dashed"
+        color="#10b981"
+        bgcolor="#ecfdf5"
+        fontcolor="#065f46"
+        fontsize=13
+
+        scribe [label="SCRIBE\n(Haiku, $0.001)\n\nCommit message\nPR description\nChangelog entry"
+                fillcolor="#f59e0b" fontcolor="white"]
+        minstrel [label="MINSTREL\n(Sonnet, $$)\n\nDocumentation\nRelease notes\nREADME updates"
+                  fillcolor="#3b82f6" fontcolor="white"]
+        shipped [label="SHIPPED\n(PR Merged)" shape=doubleoctagon
+                 fillcolor="#10b981" fontcolor="white" penwidth=2 color="#059669"]
+
+        scribe -> shipped
+        minstrel -> shipped [style=dashed label="if needed"]
+    }
+
+    customer -> scribe [label="SATISFIED\n(tests pass)" color="#10b981" penwidth=2]
+
+    // Feedback loop
+    shipped -> ledger [label="record outcome:\nwho cooked, attempts,\ncost, satisfaction"
+                       color="#8b5cf6" penwidth=2 style=bold constraint=false]
+
+    // ═══════════════════════════════════════
+    // BACKGROUND OPERATIONS
+    // ═══════════════════════════════════════
+    subgraph cluster_night {
+        label="Night Shift (Background)"
+        labeljust=l
+        style="rounded,dashed"
+        color="#6b7280"
+        bgcolor="#f3f4f6"
+        fontcolor="#374151"
+        fontsize=13
+
+        watchman [label="WATCHMAN\n(Cron)\n\nOllama running?\nModels loaded?\nDisk space?"
+                  fillcolor="#6b7280" fontcolor="white"]
+        firetender [label="FIRE-TENDER\n(Cron)\n\nKeep models warm\nRefresh tokens"
+                    fillcolor="#6b7280" fontcolor="white"]
+        dungcollector [label="DUNG COLLECTOR\n(Cron)\n\nDocker prune\nOld branches\nTemp files"
+                       fillcolor="#6b7280" fontcolor="white"]
+        farrier [label="FARRIER\n(Sonnet, weekly)\n\nDep updates\nSecurity patches"
+                 fillcolor="#3b82f6" fontcolor="white"]
+    }
+
+    // ═══════════════════════════════════════
+    // SECURITY
+    // ═══════════════════════════════════════
+    subgraph cluster_security {
+        label="Security (Always Active)"
+        labeljust=l
+        style="rounded,filled"
+        color="#991b1b"
+        bgcolor="#fef2f2"
+        fontcolor="#991b1b"
+        fontsize=13
+
+        bouncer [label="BOUNCER\n(Kernel)\n\nCapability enforcement\nThree-layer defense\nThe v0.1 deliverable"
+                 fillcolor="#dc2626" fontcolor="white" penwidth=2 shape=hexagon]
+        strongarm [label="STRONG-ARM\n(Pre-commit hooks)\n\nBlocks bad commits\nValidates standards"
+                   fillcolor="#dc2626" fontcolor="white" shape=hexagon]
+    }
+
+    // ═══════════════════════════════════════
+    // LEGEND
+    // ═══════════════════════════════════════
+    subgraph cluster_legend {
+        label="Cost Legend"
+        labeljust=l
+        style="rounded"
+        color="#e5e7eb"
+        bgcolor="white"
+        fontsize=13
+
+        node [shape=box width=2]
+        l_free [label="Free — Local models" fillcolor="#10b981" fontcolor="white"]
+        l_cheap [label="$0.001 — Haiku" fillcolor="#f59e0b" fontcolor="white"]
+        l_moderate [label="$$ — Sonnet" fillcolor="#3b82f6" fontcolor="white"]
+        l_expensive [label="$$$ — Opus" fillcolor="#8b5cf6" fontcolor="white"]
+        l_script [label="$0 — Scripts/Cron" fillcolor="#6b7280" fontcolor="white"]
+        l_tests [label="Tests — The judge" fillcolor="#ef4444" fontcolor="white"]
+
+        l_free -> l_cheap -> l_moderate -> l_expensive -> l_script -> l_tests [style=invis]
+    }
+}

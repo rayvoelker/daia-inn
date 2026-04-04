@@ -1,0 +1,151 @@
+---
+title: "The Inn Model — Agent Orchestration"
+---
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#2563eb', 'primaryTextColor': '#fff', 'primaryBorderColor': '#1e40af', 'lineColor': '#6b7280', 'secondaryColor': '#f59e0b', 'tertiaryColor': '#10b981', 'background': '#fafafa', 'fontFamily': 'system-ui', 'fontSize': '14px'}}}%%
+
+flowchart TB
+    %% ═══════════════════════════════════════
+    %% ARRIVAL
+    %% ═══════════════════════════════════════
+    ORDER["🍺 New Order Arrives\n(Task / Feature Request)"]
+
+    subgraph FRONT["🏠 The Front of House"]
+        direction TB
+        INNKEEPER["👑 INNKEEPER\n(Opus)\nClassifies order, manages budget"]
+        LEDGER[("📒 THE LEDGER\n(Stats DB)\nTask history,\ncost tracking,\nsuccess rates")]
+        INNKEEPER -.->|consults| LEDGER
+    end
+
+    ORDER --> INNKEEPER
+
+    %% ═══════════════════════════════════════
+    %% CLASSIFICATION
+    %% ═══════════════════════════════════════
+    subgraph CLASSIFY["🔍 Order Classification"]
+        direction LR
+        TRIVIAL["🥖 TRIVIAL\nrename, format,\nscaffold"]
+        STANDARD["🍖 STANDARD\nbug fix, utility,\nnew feature"]
+        COMPLEX["🎂 COMPLEX\nrefactor, architecture,\ncross-module"]
+        VIP["👑 VIP ORDER\ntest design,\ncritical decisions"]
+    end
+
+    INNKEEPER -->|"classify\n(check ledger)"| CLASSIFY
+
+    %% ═══════════════════════════════════════
+    %% SCOUTING
+    %% ═══════════════════════════════════════
+    subgraph STABLES["🐴 The Stables (Infrastructure)"]
+        direction TB
+        OSTLER["🐎 OSTLER\n(Script)\nCreates branch/worktree"]
+        RUNNER["🏃 RUNNER / SCOUT\n(gemma4:e4b, free)\nChecks the pantry,\nfinds ingredients"]
+        STABLEBOY["🧹 STABLE BOY\n(Script)\nCleans workspace"]
+        OSTLER --> RUNNER
+    end
+
+    CLASSIFY -->|"all orders\nstart here"| STABLES
+
+    %% ═══════════════════════════════════════
+    %% THE KITCHEN
+    %% ═══════════════════════════════════════
+    subgraph KITCHEN["🔥 The Kitchen (Implementation)"]
+        direction TB
+
+        subgraph PREP["Prep Station"]
+            BAKER["🍞 BAKER\n(Haiku, $0.001)\nScaffolds files,\ntemplates, stubs"]
+            KITCHENBOY["🧒 KITCHEN BOY\n(Haiku, $0.001)\nBoilerplate,\nimports, types"]
+        end
+
+        subgraph COOKING["Cooking Station"]
+            LINECOOK["👨‍🍳 LINE COOK\n(gemma4:26b, free)\nStandard dishes\n50 tok/s"]
+            HEADCHEF["👨‍🍳 HEAD CHEF\n(Sonnet, $$)\nComplex dishes\nEscalation target"]
+            OWNER_COOKS["👑 OWNER COOKS\n(Opus, $$$)\nLast resort only"]
+        end
+
+        PREP --> COOKING
+    end
+
+    TRIVIAL -->|"$0.001"| KITCHENBOY
+    STANDARD -->|"scout findings"| BAKER
+    COMPLEX -->|"scout findings"| BAKER
+    VIP -->|"innkeeper writes\nthe recipe (tests)"| BAKER
+
+    %% ═══════════════════════════════════════
+    %% COOKING FLOW + ESCALATION
+    %% ═══════════════════════════════════════
+    KITCHENBOY -->|"trivial tasks\ndone here"| PLATECHECK
+    BAKER -->|"prepped"| LINECOOK
+    LINECOOK -->|"🔴 stuck after\n3 attempts"| HEADCHEF
+    HEADCHEF -->|"🔴 stuck"| OWNER_COOKS
+
+    %% ═══════════════════════════════════════
+    %% PLATE CHECK (Review)
+    %% ═══════════════════════════════════════
+    subgraph SERVICE["🍽️ The Dining Room"]
+        direction TB
+        PLATECHECK["🧐 WAITSTAFF\n(Reviewer / Sonnet)\nInspects every plate"]
+        CHAMBERMAID["🧹 CHAMBERMAID\n(Haiku, $0.001)\nCleans the plate\n(lint, format, dead code)"]
+        CUSTOMER["😋 CUSTOMER\n(Tests)\nEats or sends it back"]
+    end
+
+    LINECOOK -->|"done"| CHAMBERMAID
+    HEADCHEF -->|"done"| CHAMBERMAID
+    OWNER_COOKS -->|"done"| CHAMBERMAID
+    CHAMBERMAID -->|"cleaned up"| PLATECHECK
+    PLATECHECK -->|"approved"| CUSTOMER
+
+    %% ═══════════════════════════════════════
+    %% CUSTOMER FEEDBACK
+    %% ═══════════════════════════════════════
+    CUSTOMER -->|"😊 satisfied\n(tests pass)"| SCRIBE
+    CUSTOMER -->|"😤 sends back\n(tests fail)"| LINECOOK
+
+    subgraph DELIVERY["📦 Delivery"]
+        direction TB
+        SCRIBE["✍️ SCRIBE\n(Haiku, $0.001)\nCommit message,\nPR description"]
+        MINSTREL["🎵 MINSTREL\n(Sonnet, $$)\nDocs, changelog,\nrelease notes"]
+        SHIP["🚀 SHIPPED\n(PR merged)"]
+        SCRIBE --> SHIP
+        MINSTREL -.->|"if needed"| SHIP
+    end
+
+    %% ═══════════════════════════════════════
+    %% FEEDBACK TO LEDGER
+    %% ═══════════════════════════════════════
+    SHIP -->|"record outcome:\nwho cooked it,\nhow many attempts,\nwhat it cost"| LEDGER
+
+    %% ═══════════════════════════════════════
+    %% BACKGROUND OPERATIONS
+    %% ═══════════════════════════════════════
+    subgraph BACKGROUND["🌙 Night Shift (Background Operations)"]
+        direction LR
+        WATCHMAN["🔦 WATCHMAN\n(Cron)\nHealth checks:\nOllama up?\nModels loaded?\nDisk space?"]
+        FIRETENDER["🔥 FIRE-TENDER\n(Cron)\nKeep models warm,\nrefresh tokens"]
+        DUNGCOLLECTOR["💩 DUNG COLLECTOR\n(Cron)\nDocker prune,\nold branches,\ntemp files"]
+        FARRIER["🔧 FARRIER\n(Sonnet, weekly)\nDependency updates,\nsecurity patches"]
+    end
+
+    %% ═══════════════════════════════════════
+    %% SECURITY
+    %% ═══════════════════════════════════════
+    subgraph SECURITY["🛡️ Security (Always Active)"]
+        direction LR
+        BOUNCER["💪 BOUNCER\n(Kernel)\nCapability\nenforcement"]
+        STRONGARM["⚔️ STRONG-ARM\n(Pre-commit hooks)\nBlocks bad commits"]
+    end
+
+    %% Style classes
+    classDef free fill:#10b981,stroke:#059669,color:#fff
+    classDef cheap fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef moderate fill:#3b82f6,stroke:#2563eb,color:#fff
+    classDef expensive fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    classDef script fill:#6b7280,stroke:#4b5563,color:#fff
+    classDef tests fill:#ef4444,stroke:#dc2626,color:#fff
+    classDef data fill:#f3f4f6,stroke:#9ca3af,color:#1a1a1a
+
+    class RUNNER,LINECOOK free
+    class KITCHENBOY,BAKER,CHAMBERMAID,SCRIBE cheap
+    class HEADCHEF,PLATECHECK,FARRIER,MINSTREL moderate
+    class INNKEEPER,OWNER_COOKS,VIP expensive
+    class OSTLER,STABLEBOY,WATCHMAN,FIRETENDER,DUNGCOLLECTOR,BOUNCER,STRONGARM script
+    class CUSTOMER tests
+    class LEDGER data
