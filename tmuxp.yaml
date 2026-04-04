@@ -1,0 +1,26 @@
+session_name: daia-inn
+start_directory: /home/ray/daia-inn
+
+windows:
+  - window_name: inn
+    layout: main-horizontal
+    options:
+      main-pane-height: 70%
+    panes:
+      - shell_command:
+          - docker compose up
+      - shell_command:
+          - docker compose logs -f inn
+
+  - window_name: ollama
+    panes:
+      - shell_command:
+          - docker compose logs -f ollama
+
+  - window_name: dev
+    layout: even-horizontal
+    panes:
+      - shell_command:
+          - echo "dev shell ready"
+      - shell_command:
+          - echo "uv run python -m src.server  # local dev mode"
