@@ -1,3 +1,11 @@
+---
+title: "It's Markdown All the Way Down"
+subtitle: "How Claude Code Turns Prose Into a Development Pipeline"
+date: 2026-04-03
+series: daia-inn
+order: 1
+---
+
 # It's Markdown All the Way Down: How Claude Code Turns Prose Into a Development Pipeline
 
 I've been building a multi-model agent pipeline on a library workstation with an RTX 4090, and somewhere around hour forty I had the realization that changed how I think about AI-assisted development: **there is no framework**.

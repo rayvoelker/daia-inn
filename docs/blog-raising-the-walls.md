@@ -1,3 +1,11 @@
+---
+title: "Raising the Walls"
+subtitle: "Building the Watchman with Two Agents and a Phone"
+date: 2026-04-04
+series: daia-inn
+order: 4
+---
+
 # Raising the Walls: Building the Watchman with Two Agents and a Phone
 
 The inn has walls now. Not all of them, but the first three rooms are framed and the tests are passing.

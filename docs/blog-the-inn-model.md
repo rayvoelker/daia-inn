@@ -1,3 +1,11 @@
+---
+title: "The Inn Model"
+subtitle: "What Medieval Hospitality Teaches Us About AI Agent Orchestration"
+date: 2026-04-03
+series: daia-inn
+order: 2
+---
+
 # The Inn Model: What Medieval Hospitality Teaches Us About AI Agent Orchestration
 
 *A follow-up to [It's Markdown All the Way Down](blog-claude-code-agents.md)*

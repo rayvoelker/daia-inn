@@ -1,3 +1,11 @@
+---
+title: "The Handoff"
+subtitle: "How a Link Aggregator Became a Workstation"
+date: 2026-04-03
+series: daia-inn
+order: 3
+---
+
 # The Handoff: How a Link Aggregator Became a Workstation
 
 I started building a news aggregator. I ended up designing an inn.
