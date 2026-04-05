@@ -91,7 +91,7 @@ Three actors, three roles, zero ambiguity about who does what. That's the inn mo
 ---
 
 Previously:
-- [The Handoff](2026-04-03-blog-the-handoff.md) — how a link aggregator became a workstation
-- [It's Markdown All the Way Down](2026-04-03-blog-claude-code-agents.md) — how the pipeline works
-- [The Inn Model](2026-04-03-blog-the-inn-model.md) — the full role taxonomy and economics
+- [The Handoff](2026-04-03-03-blog-the-handoff.md) — how a link aggregator became a workstation
+- [It's Markdown All the Way Down](2026-04-03-01-blog-claude-code-agents.md) — how the pipeline works
+- [The Inn Model](2026-04-03-02-blog-the-inn-model.md) — the full role taxonomy and economics
 - [daia-inn v0.1 Design Spec](daia-inn-v01-design.md) — The Watchman

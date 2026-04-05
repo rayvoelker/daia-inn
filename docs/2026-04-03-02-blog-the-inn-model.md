@@ -8,7 +8,7 @@ order: 2
 
 # The Inn Model: What Medieval Hospitality Teaches Us About AI Agent Orchestration
 
-*A follow-up to [It's Markdown All the Way Down](2026-04-03-blog-claude-code-agents.md)*
+*A follow-up to [It's Markdown All the Way Down](2026-04-03-01-blog-claude-code-agents.md)*
 
 ---
 
@@ -383,7 +383,7 @@ The toolbox is ready. The menu is written. The kitchen is staffed. Time to open 
 
 ## Further Reading
 
-- [It's Markdown All the Way Down](2026-04-03-blog-claude-code-agents.md) — the first post about the pipeline
+- [It's Markdown All the Way Down](2026-04-03-01-blog-claude-code-agents.md) — the first post about the pipeline
 - [The Inn Model — Design Document](design-the-inn-model.md) — full role taxonomy, economic model, and data collection requirements
 - [v0.1 "The Bouncer" Spec](superpowers/specs/2026-04-01-munews-v01-bouncer-spec.md) — the Rust microkernel the inn will build
 - [Architecture & Design Notes](architecture.md) — munews.app system design

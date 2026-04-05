@@ -68,7 +68,7 @@ The inn is open. The first guest can check in.
 ---
 
 Previously:
-- [Raising the Walls](2026-04-04-blog-raising-the-walls.md) — building with two agents and a phone
-- [The Handoff](2026-04-03-blog-the-handoff.md) — how a link aggregator became a workstation
-- [It's Markdown All the Way Down](2026-04-03-blog-claude-code-agents.md) — how the pipeline works
-- [The Inn Model](2026-04-03-blog-the-inn-model.md) — the full role taxonomy and economics
+- [Raising the Walls](2026-04-04-04-blog-raising-the-walls.md) — building with two agents and a phone
+- [The Handoff](2026-04-03-03-blog-the-handoff.md) — how a link aggregator became a workstation
+- [It's Markdown All the Way Down](2026-04-03-01-blog-claude-code-agents.md) — how the pipeline works
+- [The Inn Model](2026-04-03-02-blog-the-inn-model.md) — the full role taxonomy and economics
