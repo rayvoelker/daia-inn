@@ -1,3 +1,3 @@
 from src.server import mcp
 
-mcp.run()
+mcp.run(transport="streamable-http")
