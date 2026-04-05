@@ -195,7 +195,7 @@ More fundamentally: the Bard monitors "active agents" — but where do agents ru
 
 **Partial resolution:** The Innkeeper's spouse (issue #1) now handles the hardest part — Innkeeper liveness — as a systemd unit on the host. This is clean because the spouse only monitors one local container. The Bard's remaining scope is worker liveness (agents dispatched by the Innkeeper), which are also containers in the compose stack. The Bard-as-systemd concern is reduced: the Bard could be a container in the compose stack that monitors sibling containers via Docker's API, rather than needing host-level systemd. The spouse handles the host-level supervision; the Bard stays inside Docker.
 
-### 4. Role Inflation — Many "Roles" Are Just Scripts or Tools
+### 4. Role Inflation — Many "Roles" Are Just Scripts or Tools — RESOLVED
 
 The roster lists 20+ roles, but many aren't agents at all:
 
@@ -213,6 +213,8 @@ The roster lists 20+ roles, but many aren't agents at all:
 Calling `ruff format` a "Barber" is charming in a blog post but potentially confusing in a spec. When you say "the inn has 20+ roles," it sounds like 20+ agents. In reality it's ~6 agents and ~15 scripts/tools. The design acknowledges this in the roster table ("Script / Cron") but the narrative treats them all as equivalent actors.
 
 **The risk:** When you design the Ledger schema, the routing logic, and the event system, do scripts get the same event protocol as agents? Does the "Barber" emit genealogy events to the Bard? If not, the role taxonomy is misleading about the system's actual complexity.
+
+**Resolution:** The canonical design doc (`docs/design.md`) now splits the roster into three explicit categories: Agents (consume tokens, make decisions), Supervisor (systemd, host-level), and Tools (scripts/cron, $0, deterministic). The metaphor is preserved but the taxonomy is honest about what's an agent and what's a script.
 
 ### 5. The Role Map Undermines the Oven Abstraction
 
@@ -290,7 +292,7 @@ The roadmap is honest about what's needed but misleading about the effort distri
 | Expensive model touches few tokens | Every interaction flows through Opus | 5-6 Opus calls per task != "few tokens" |
 | The oven is swappable | Role map keys are Ollama tag names | Config layer leaks the abstraction |
 | ~~Bard runs as systemd units~~ | ~~Inn runs in Docker~~ | ~~PARTIALLY RESOLVED: spouse is systemd (correct level), Bard stays in Docker~~ |
-| 20+ roles in the roster | ~6 are actually agents | Role count overstates system complexity |
+| ~~20+ roles in the roster~~ | ~~\~6 are actually agents~~ | ~~RESOLVED: design.md splits agents/supervisor/tools explicitly~~ |
 | Parallel kitchen with multiple orders | One GPU, one model at a time | Parallelism is prep-only, cooking is sequential |
 
 ---
@@ -299,7 +301,7 @@ The roadmap is honest about what's needed but misleading about the effort distri
 
 1. ~~**Resolve the Innkeeper identity.**~~ RESOLVED — Innkeeper is `claude -p` in a container, spouse is systemd on host. See issue #1.
 
-2. **Separate agents from tools in the taxonomy.** Keep the metaphor, but mark which roles are agents (make decisions, consume tokens) vs. tools (run scripts, cost nothing). The Ledger schema, the event protocol, and the Bard's scope all depend on this distinction.
+2. ~~**Separate agents from tools in the taxonomy.**~~ RESOLVED — design.md now has three categories: Agents, Supervisor, Tools. See issue #4.
 
 3. **Sketch the Opus call budget for a single task.** Walk through one "standard" task end-to-end and count every Innkeeper interaction. If it's 5-6 calls, the cost model in the design doc is wrong by 5x.
 
