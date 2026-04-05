@@ -13,3 +13,8 @@ dev = [
     "pytest",
     "pytest-asyncio",
 ]
+
+[dependency-groups]
+dev = [
+    "mermaid-py>=0.8.4",
+]
