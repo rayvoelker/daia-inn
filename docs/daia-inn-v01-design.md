@@ -263,8 +263,8 @@ daia-inn/
 ├── docs/
 │   ├── architecture.md         # transferred from munews.app
 │   ├── design-the-inn-model.md # transferred from munews.app
-│   ├── blog-claude-code-agents.md
-│   ├── blog-the-inn-model.md
+│   ├── 2026-04-03-blog-claude-code-agents.md
+│   ├── 2026-04-03-blog-the-inn-model.md
 │   └── diagrams/
 │       ├── inn-model.dot
 │       └── inn-model.mmd
@@ -289,8 +289,8 @@ In order of likely implementation:
 daia-inn emerged from brainstorming during the munews.app project. The research, design thinking, and inn model were developed while building a multi-model agent pipeline for that project. Key documents:
 
 - [The Inn Model — Design Document](design-the-inn-model.md) — full role taxonomy and economic model
-- [It's Markdown All the Way Down](blog-claude-code-agents.md) — how the pipeline works
-- [The Inn Model — Blog Post](blog-the-inn-model.md) — public-facing writeup
+- [It's Markdown All the Way Down](2026-04-03-blog-claude-code-agents.md) — how the pipeline works
+- [The Inn Model — Blog Post](2026-04-03-blog-the-inn-model.md) — public-facing writeup
 - [Directed Graph Diagrams](diagrams/) — Mermaid and Graphviz visualizations
 
 munews.app remains the first customer of the inn — but the inn serves anyone who walks through the door.

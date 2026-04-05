@@ -48,9 +48,10 @@ To swap backends (vLLM, llama.cpp, TGI, etc.), replace `ollama.py` with a new cl
 - `docs/daia-inn-v01-design.md` — v0.1 design spec
 - `docs/design-the-inn-model.md` — the inn model (role taxonomy, economics, adaptive routing)
 - `docs/superpowers/specs/2026-04-04-new-roles-design.md` — Bard, Farmer, Carter, Scribe design spec
-- `docs/blog-the-watchman-ships.md` — v0.1 ship log (latest)
-- `docs/blog-claude-code-agents.md` — how the pipeline works
-- `docs/blog-the-inn-model.md` — public-facing writeup
+- `docs/2026-04-04-blog-the-watchman-ships.md` — v0.1 ship log
+- `docs/2026-04-04-blog-the-serving-window.md` — MCP architecture explained (latest)
+- `docs/2026-04-03-blog-claude-code-agents.md` — how the pipeline works
+- `docs/2026-04-03-blog-the-inn-model.md` — public-facing writeup
 
 ## Safety Rules
 

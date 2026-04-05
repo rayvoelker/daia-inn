@@ -3,7 +3,7 @@ title: "The Serving Window"
 subtitle: "What the MCP Server Actually Is (and Isn't)"
 date: 2026-04-04
 series: daia-inn
-order: 6
+order: 7
 ---
 
 # The Serving Window: What the MCP Server Actually Is (and Isn't)
@@ -93,8 +93,8 @@ If the oven changes someday (vLLM, llama.cpp, TGI), you replace one file. The pa
 ---
 
 Previously:
-- [The Watchman Ships](blog-the-watchman-ships.md) — twenty tests, one resource, the inn is open
-- [Raising the Walls](blog-raising-the-walls.md) — building with two agents and a phone
-- [The Handoff](blog-the-handoff.md) — how a link aggregator became a workstation
-- [It's Markdown All the Way Down](blog-claude-code-agents.md) — how the pipeline works
-- [The Inn Model](blog-the-inn-model.md) — the full role taxonomy and economics
+- [The Watchman Ships](2026-04-04-blog-the-watchman-ships.md) — twenty tests, one resource, the inn is open
+- [Raising the Walls](2026-04-04-blog-raising-the-walls.md) — building with two agents and a phone
+- [The Handoff](2026-04-03-blog-the-handoff.md) — how a link aggregator became a workstation
+- [It's Markdown All the Way Down](2026-04-03-blog-claude-code-agents.md) — how the pipeline works
+- [The Inn Model](2026-04-03-blog-the-inn-model.md) — the full role taxonomy and economics

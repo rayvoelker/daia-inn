@@ -114,7 +114,7 @@ It's markdown all the way down. It's an inn all the way up.
 ---
 
 Previously:
-- [It's Markdown All the Way Down](blog-claude-code-agents.md) — how the pipeline works
-- [The Inn Model](blog-the-inn-model.md) — the full role taxonomy and economics
+- [It's Markdown All the Way Down](2026-04-03-blog-claude-code-agents.md) — how the pipeline works
+- [The Inn Model](2026-04-03-blog-the-inn-model.md) — the full role taxonomy and economics
 - [The Inn Model — Design Document](design-the-inn-model.md) — directed graphs and hidden complexity
 - [daia-inn v0.1 Design Spec](daia-inn-v01-design.md) — The Watchman
