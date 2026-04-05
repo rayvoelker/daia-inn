@@ -1,0 +1,159 @@
+---
+title: "The Inn — Physical Architecture"
+---
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#2563eb', 'primaryTextColor': '#fff', 'primaryBorderColor': '#1e40af', 'lineColor': '#6b7280', 'secondaryColor': '#f59e0b', 'tertiaryColor': '#10b981', 'background': '#fafafa', 'fontFamily': 'system-ui', 'fontSize': '14px'}}}%%
+
+flowchart TB
+
+    %% ═══════════════════════════════════════
+    %% HOST LAYER — systemd (the spouse)
+    %% ═══════════════════════════════════════
+    subgraph HOST["daia-ts host (systemd)"]
+        direction TB
+
+        subgraph SPOUSE_LAYER["The Innkeeper's Spouse"]
+            direction LR
+            SPOUSE_TIMER["innkeeper-spouse.timer\nOnUnitActiveSec=30s"]
+            SPOUSE_SVC["innkeeper-spouse.service\n\nChecks innkeeper logs\nKills on stall (120s)\nEnforces budget\nWrites intervention records"]
+            SPOUSE_TIMER -->|triggers| SPOUSE_SVC
+        end
+
+        %% ═══════════════════════════════════════
+        %% DOCKER LAYER
+        %% ═══════════════════════════════════════
+        subgraph COMPOSE["docker compose"]
+            direction TB
+
+            %% ─── The Innkeeper ───
+            subgraph INNKEEPER_BOX["innkeeper container"]
+                direction TB
+                INNKEEPER["claude -p\n(per-task invocation)\n\nReads ledger\nClassifies task\nDispatches workers\nAccumulates context\nHands narrative to scribe\nExits when done"]
+                CLAUDE_MD["CLAUDE.md\n(the inn model\nas markdown)"]
+                API_KEY["ANTHROPIC_API_KEY"]
+            end
+
+            %% ─── The Inn (MCP Server) ───
+            subgraph INN_BOX["inn container :3001"]
+                direction TB
+                MCP["MCP Server\n(FastMCP, Python)"]
+
+                subgraph RESOURCES["Resources (read-only windows)"]
+                    direction LR
+                    HEALTH["inn://health\n(v0.1 - live)"]
+                    ROSTER["inn://roster\n(future)"]
+                    LEDGER_R["inn://ledger\n(future)"]
+                end
+
+                subgraph TOOLS["Tools (actions)"]
+                    direction LR
+                    COOK_TOOL["inn.cook()\n(future)"]
+                    DISPATCH["inn.dispatch()\n(future)"]
+                end
+
+                subgraph CODE["Source modules"]
+                    direction LR
+                    SERVER["server.py\n(composition)"]
+                    HEALTH_MOD["health.py\n(parsing)"]
+                    SYSTEM_MOD["system.py\n(GPU/RAM)"]
+                    OLLAMA_MOD["ollama.py\n(I/O client)"]
+                end
+            end
+
+            %% ─── The Oven ───
+            subgraph OVEN_BOX["ollama container :11434"]
+                direction TB
+                OLLAMA["Ollama API"]
+
+                subgraph MODELS["Loaded Models"]
+                    direction LR
+                    LINE_COOK["gemma4:26b\n(line cook)\nGPU, 50 tok/s"]
+                    SCOUT["gemma4:e4b-cpu\n(scout)\nCPU, 13 tok/s"]
+                end
+            end
+
+            %% ─── Shared Storage ───
+            subgraph STORAGE["Shared Volumes"]
+                direction LR
+                LEDGER_VOL[("Ledger\n(task records)")]
+                OLLAMA_VOL[("ollama_data\n(model weights)")]
+            end
+        end
+    end
+
+    %% ═══════════════════════════════════════
+    %% EXTERNAL — Clients & APIs
+    %% ═══════════════════════════════════════
+    subgraph EXTERNAL["External"]
+        direction LR
+        ANTHROPIC["Anthropic API\n(api.anthropic.com)\n\nOpus / Sonnet / Haiku"]
+        HUMAN["Human\n(Claude Code session\non laptop)"]
+        TAILSCALE["Tailscale\n(daia.tailnet)"]
+    end
+
+    %% ═══════════════════════════════════════
+    %% HARDWARE
+    %% ═══════════════════════════════════════
+    subgraph HW["Hardware"]
+        direction LR
+        GPU["RTX 4090\n24GB VRAM"]
+        RAM["124GB RAM\n32 cores"]
+    end
+
+    %% ═══════════════════════════════════════
+    %% CONNECTIONS
+    %% ═══════════════════════════════════════
+
+    %% Spouse watches innkeeper
+    SPOUSE_SVC -->|"docker logs / restart"| INNKEEPER_BOX
+
+    %% Innkeeper connects to inn via MCP
+    INNKEEPER -->|"MCP client\n(reads resources,\ncalls tools)"| MCP
+
+    %% Innkeeper calls Anthropic API
+    INNKEEPER -->|"API calls\n(Opus for decisions)"| ANTHROPIC
+
+    %% Inn queries Ollama
+    OLLAMA_MOD -->|"HTTP\n/api/ps, /api/version"| OLLAMA
+
+    %% Inn reads system stats
+    SYSTEM_MOD -->|"nvidia-smi\n/proc/meminfo"| HW
+
+    %% Human connects via Tailscale
+    HUMAN -->|"MCP client\n(via Tailscale)"| TAILSCALE
+    TAILSCALE --> MCP
+
+    %% Models use hardware
+    LINE_COOK -.-> GPU
+    SCOUT -.-> RAM
+
+    %% Storage connections
+    INNKEEPER -->|"reads/writes"| LEDGER_VOL
+    OLLAMA -->|"model weights"| OLLAMA_VOL
+
+    %% ═══════════════════════════════════════
+    %% STYLES
+    %% ═══════════════════════════════════════
+    classDef host fill:#1e1b4b,stroke:#4338ca,color:#e0e7ff
+    classDef spouse fill:#be185d,stroke:#9d174d,color:#fff
+    classDef container fill:#1e3a5f,stroke:#2563eb,color:#dbeafe
+    classDef mcp fill:#2563eb,stroke:#1e40af,color:#fff
+    classDef resource fill:#10b981,stroke:#059669,color:#fff
+    classDef tool fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef code fill:#6b7280,stroke:#4b5563,color:#fff
+    classDef model fill:#10b981,stroke:#059669,color:#fff
+    classDef storage fill:#f3f4f6,stroke:#9ca3af,color:#1a1a1a
+    classDef external fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    classDef hw fill:#dc2626,stroke:#b91c1c,color:#fff
+    classDef future fill:#374151,stroke:#6b7280,color:#9ca3af,stroke-dasharray: 5 5
+
+    class SPOUSE_TIMER,SPOUSE_SVC spouse
+    class MCP mcp
+    class HEALTH resource
+    class ROSTER,LEDGER_R future
+    class COOK_TOOL,DISPATCH future
+    class SERVER,HEALTH_MOD,SYSTEM_MOD,OLLAMA_MOD code
+    class LINE_COOK,SCOUT model
+    class LEDGER_VOL,OLLAMA_VOL storage
+    class ANTHROPIC,HUMAN,TAILSCALE external
+    class GPU,RAM hw
+    class INNKEEPER,CLAUDE_MD,API_KEY container

@@ -3,6 +3,90 @@
 > Review date: 2026-04-04. Status: open issues, pending resolution.
 > Scope: full design review covering code, specs, blog posts, and architecture.
 
+## The Inn — Physical Architecture
+
+> Full Mermaid diagram: [`docs/diagrams/the-inn.mmd`](diagrams/the-inn.mmd)
+
+```
+┌─ daia-ts host ──────────────────────────────────────────────────────────┐
+│                                                                         │
+│  SYSTEMD (above everything — survives container crashes)                │
+│  ┌────────────────────────────────────────────────────────┐             │
+│  │  THE INNKEEPER'S SPOUSE                                │             │
+│  │  innkeeper-spouse.timer  → runs every 30s              │             │
+│  │  innkeeper-spouse.service → checks logs, kills/restarts│             │
+│  │                            enforces budget & timeouts  │             │
+│  └──────────────────────────────┬─────────────────────────┘             │
+│                                 │ docker logs / restart                  │
+│                                 ▼                                        │
+│  DOCKER COMPOSE ────────────────────────────────────────────────────    │
+│  │                                                                 │    │
+│  │  ┌─────────────────────┐   ┌──────────────────────────────┐     │    │
+│  │  │  innkeeper           │   │  inn (MCP server :3001)      │     │    │
+│  │  │                      │   │                              │     │    │
+│  │  │  claude -p            │──►│  Resources (windows):       │     │    │
+│  │  │  (per-task)          │MCP│    inn://health    ✓ live    │     │    │
+│  │  │                      │   │    inn://roster   ○ future   │     │    │
+│  │  │  Reads ledger        │   │    inn://ledger   ○ future   │     │    │
+│  │  │  Classifies task     │   │                              │     │    │
+│  │  │  Dispatches workers  │   │  Tools (actions):            │     │    │
+│  │  │  Accumulates context │   │    inn.cook()     ○ future   │     │    │
+│  │  │  Exits when done     │   │    inn.dispatch() ○ future   │     │    │
+│  │  │                      │   │                              │     │    │
+│  │  │  Needs:              │   │  Code:                       │     │    │
+│  │  │   ANTHROPIC_API_KEY  │   │    server.py  (composition)  │     │    │
+│  │  │   CLAUDE.md (prompt) │   │    health.py  (parsing)      │     │    │
+│  │  └──────────┬───────────┘   │    system.py  (GPU/RAM)      │     │    │
+│  │             │               │    ollama.py  (I/O client)   │     │    │
+│  │             │               └──────────┬───────────────────┘     │    │
+│  │             │                          │ HTTP                    │    │
+│  │             │               ┌──────────▼───────────────────┐     │    │
+│  │             │               │  ollama (oven :11434)         │     │    │
+│  │             │               │                              │     │    │
+│  │             │               │  gemma4:26b    → GPU  50t/s  │     │    │
+│  │             │               │  (line cook)                 │     │    │
+│  │             │               │                              │     │    │
+│  │             │               │  gemma4:e4b    → CPU  13t/s  │     │    │
+│  │             │               │  (scout)                     │     │    │
+│  │             │               └──────────────────────────────┘     │    │
+│  │             │                                                    │    │
+│  │             │  ┌──────────────────────────┐                      │    │
+│  │             └─►│  Ledger (shared volume)   │                      │    │
+│  │                │  Task records, costs,     │                      │    │
+│  │                │  routing history           │                      │    │
+│  │                └──────────────────────────┘                      │    │
+│  └──────────────────────────────────────────────────────────────────┘    │
+│                                                                         │
+│  HARDWARE                                                               │
+│  ├── RTX 4090 (24GB VRAM) ← one GPU model at a time                    │
+│  ├── 124GB RAM, 32 cores  ← CPU models run here                        │
+│  └── Tailscale (daia.tailnet)                                           │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+         │                              ▲
+         │ outbound API calls           │ inbound MCP (via Tailscale)
+         ▼                              │
+  ┌──────────────┐              ┌───────┴────────┐
+  │ Anthropic API │              │  MCP Clients    │
+  │               │              │                 │
+  │ Opus ($$$$)   │              │  Claude Code    │
+  │ Sonnet ($$)   │              │  Claude Desktop │
+  │ Haiku ($)     │              │  Custom scripts │
+  └──────────────┘              └─────────────────┘
+```
+
+**Authority hierarchy:**
+
+| Layer | Who | Can do |
+|-------|-----|--------|
+| systemd | Spouse | Kill/restart all containers. Budget enforcement. The only thing outside Docker. |
+| Docker | Innkeeper | Read MCP resources, call tools, dispatch to oven. Per-task lifecycle. |
+| Docker | Inn (MCP) | Serve resources, execute tools. No decisions — just answers and actions. |
+| Docker | Ollama (oven) | Run prompts through loaded models. Swappable backend. |
+| External | Human / clients | Connect via Tailscale, read resources, invoke tools. |
+
+---
+
 ## What's Strong
 
 **The v0.1 code is excellent.** Clean separation (parsers don't import I/O, I/O doesn't import domain logic, server composes). The oven abstraction is real, not aspirational — `ollama.py` is genuinely the only Ollama-coupled file. Tests are thorough. This is a solid foundation.
