@@ -15,22 +15,70 @@
 
 ## Issues That Need Resolution
 
-### 1. The Innkeeper Identity Crisis
+### 1. The Innkeeper Identity Crisis — RESOLVED
 
-This is the biggest unresolved question in the entire design. Who *is* the Innkeeper?
+**Original question:** Who is the Innkeeper? The design described it as "the star topology hub" but never specified where it lives.
 
-- `design-the-inn-model.md` says: Innkeeper = Opus, the orchestrator, the star topology hub
-- `blog-the-serving-window.md` says: "The agents — Claude Code sessions, the future Bard, the future Innkeeper — all live *outside* the inn container"
-- But in practice today: Claude Code *is* the Innkeeper. It's the thing reading `inn://health`, making routing decisions, dispatching work
+**Resolution:** The Innkeeper is Claude Code running headless (`claude -p`) in a Docker container within the compose stack. It connects to the inn as an MCP client, reads resources (`inn://health`, `inn://roster`, `inn://ledger`), and dispatches work to local models via Ollama through MCP tools.
 
-So is the Innkeeper:
-- **(a)** Claude Code itself (the human's session), or
-- **(b)** a separate autonomous agent that connects to the inn as an MCP client, or
-- **(c)** a future component that doesn't exist yet?
+```
+┌─ daia-ts host ─────────────────────────────────────┐
+│                                                     │
+│  systemd                                            │
+│  ├── innkeeper-spouse.service    ← watches him      │
+│  ├── innkeeper-spouse.timer      ← heartbeat loop   │
+│  │                                                  │
+│  └── docker compose                                 │
+│      ├── ollama        (oven)                       │
+│      ├── inn           (MCP server)                 │
+│      └── innkeeper     (claude -p)                  │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
 
-This matters enormously because the entire star topology depends on the Innkeeper accumulating context across stages, reading the ledger, reclassifying failures. If the Innkeeper is just "whatever Claude Code session the human is running," then there's no persistent orchestrator — the star topology resets every session. If it's a separate autonomous agent, you need to design its lifecycle, persistence, and authority model.
+**The Innkeeper container needs:**
+- `ANTHROPIC_API_KEY` in its environment
+- Network access to `api.anthropic.com` (outbound) and the `inn` service (inbound MCP)
+- A CLAUDE.md or prompt that defines the orchestration logic — the inn model as markdown
 
-The design talks about the Innkeeper as if it's a permanent resident of the inn, but the architecture has no place for it to live.
+**Per-task, not long-running.** Each task is a fresh `claude -p` invocation. The Innkeeper reads the ledger, classifies, dispatches, monitors, writes results, and exits. The ledger is the Innkeeper's persistent memory, not the context window. This avoids context window overflow and stale state.
+
+**The Innkeeper's Spouse** is a systemd unit on the host — the only role that lives *outside* the containerized world. She supervises the Innkeeper container:
+
+```ini
+# innkeeper-spouse.timer
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=30s
+
+# innkeeper-spouse.service (Type=oneshot)
+# - check innkeeper container logs for recent output
+# - if no tokens for 120s: docker restart innkeeper
+# - if cost > budget: docker stop innkeeper
+# - write structured record of any intervention
+```
+
+The spouse lives at the systemd layer because she needs to **outlive and restart** the Innkeeper. If she were inside a container, she'd die when he does. systemd is the right level — it manages Docker, not the other way around.
+
+**What the spouse does that no other role can:**
+- Kills and restarts the Innkeeper on stall (the Bard only *informs*, the spouse *acts*)
+- Enforces budget limits ("you've spent $0.40 on a $0.10 task — you're done")
+- Enforces timeouts ("10 minutes on a task the ledger says takes 3 — escalate or stop")
+
+**Authority hierarchy:**
+
+| Layer | Who | Authority |
+|-------|-----|-----------|
+| systemd (host) | Spouse | Can kill/restart everything below |
+| Docker | Innkeeper, Inn, Ollama | Can dispatch work, manage pipeline |
+| MCP | Workers via Inn | Can cook, clean, review |
+
+The spouse is the supervisor pattern (Erlang/OTP style). You can't self-monitor — someone outside has to hold the kill switch. Initially a bash script; could later use Haiku ($0.001/check) for smarter "stuck vs. thinking" judgment.
+
+**What this resolves:**
+- The Innkeeper has a concrete home (container) and lifecycle (per-task invocation)
+- The star topology hub is real infrastructure, not a conceptual role
+- The spouse provides the independent liveness monitoring that the Bard spec needed but couldn't cleanly implement for the Innkeeper itself
 
 ### 2. Star Topology vs. Cost Efficiency — Fundamental Tension
 
@@ -46,7 +94,7 @@ A standard task through the full pipeline hits the Innkeeper at least 5-6 times:
 
 **The question:** Can some of these routing decisions be downgraded? Could a "shift manager" (Sonnet) handle routine routing while Opus only handles reclassification and complex judgment? The design doesn't explore this, but the economics demand it.
 
-### 3. The Bard's Implementation Contradicts the Architecture
+### 3. The Bard's Implementation Contradicts the Architecture — PARTIALLY RESOLVED
 
 The Bard spec says:
 
@@ -60,6 +108,8 @@ But the inn runs in Docker. The Bard needs to:
 systemd units on the host watching Docker containers crosses the container abstraction boundary. The blog post acknowledges this loosely ("A Bard container that periodically connects via MCP... is a plausible future design") but the spec commits to systemd.
 
 More fundamentally: the Bard monitors "active agents" — but where do agents run? If they're Claude Code sessions on a laptop, the Bard can't observe them from the server. If they're containers, it can watch Docker. If they're tmux panes (as in the "Raising the Walls" blog), it's fragile host-level scripting. The liveness mechanism is TBD, and it's the Bard's entire reason to exist.
+
+**Partial resolution:** The Innkeeper's spouse (issue #1) now handles the hardest part — Innkeeper liveness — as a systemd unit on the host. This is clean because the spouse only monitors one local container. The Bard's remaining scope is worker liveness (agents dispatched by the Innkeeper), which are also containers in the compose stack. The Bard-as-systemd concern is reduced: the Bard could be a container in the compose stack that monitors sibling containers via Docker's API, rather than needing host-level systemd. The spouse handles the host-level supervision; the Bard stays inside Docker.
 
 ### 4. Role Inflation — Many "Roles" Are Just Scripts or Tools
 
@@ -152,10 +202,10 @@ The roadmap is honest about what's needed but misleading about the effort distri
 
 | Claim A | Claim B | Tension |
 |---------|---------|---------|
-| Innkeeper is the hub of the star topology | Agents live outside the inn container | Where does the hub live? |
+| ~~Innkeeper is the hub of the star topology~~ | ~~Agents live outside the inn container~~ | ~~RESOLVED: Innkeeper is `claude -p` in a container, spouse is systemd on host~~ |
 | Expensive model touches few tokens | Every interaction flows through Opus | 5-6 Opus calls per task != "few tokens" |
 | The oven is swappable | Role map keys are Ollama tag names | Config layer leaks the abstraction |
-| Bard runs as systemd units | Inn runs in Docker | Host-level monitoring of containers |
+| ~~Bard runs as systemd units~~ | ~~Inn runs in Docker~~ | ~~PARTIALLY RESOLVED: spouse is systemd (correct level), Bard stays in Docker~~ |
 | 20+ roles in the roster | ~6 are actually agents | Role count overstates system complexity |
 | Parallel kitchen with multiple orders | One GPU, one model at a time | Parallelism is prep-only, cooking is sequential |
 
@@ -163,7 +213,7 @@ The roadmap is honest about what's needed but misleading about the effort distri
 
 ## Recommended Next Steps
 
-1. **Resolve the Innkeeper identity.** Decide whether it's Claude Code, a separate persistent agent, or a future component. This affects every downstream design decision.
+1. ~~**Resolve the Innkeeper identity.**~~ RESOLVED — Innkeeper is `claude -p` in a container, spouse is systemd on host. See issue #1.
 
 2. **Separate agents from tools in the taxonomy.** Keep the metaphor, but mark which roles are agents (make decisions, consume tokens) vs. tools (run scripts, cost nothing). The Ledger schema, the event protocol, and the Bard's scope all depend on this distinction.
 
